@@ -15,6 +15,16 @@
 const interval = 60 * 1000;
 const alert_interval = 30 * 60 * 1000;
 
+let workMode = false;
+
+browser.runtime.onMessage.addListener(function (request, sender, sendResponse) {
+  if (request.command === "workMode") {
+    workMode = !workMode;
+    console.log(`Work mode: ${workMode}`);
+    return true;
+  }
+});
+
 //Timer Update Routine
 function main() {
   function TimerUpdateRoutine(tabs) {
@@ -68,13 +78,15 @@ function main() {
         };
       } else {
         // Just update logged time on same day
-        item.ytIntrrupt.logged += interval;
-        if (Date.now() - item.ytIntrrupt.lastlog < (interval + 5 * 1000)) {
-          item.ytIntrrupt.lastlog = Date.now();
-          item.ytIntrrupt.session += interval;
-        } else {
-          item.ytIntrrupt.lastlog = Date.now();
-          item.ytIntrrupt.session = 0;
+        item.ytIntrrupt.lastlog = Date.now();
+        if (!workMode) {
+          if ((Date.now() - item.ytIntrrupt.lastlog < (interval + 5 * 1000))) {
+            item.ytIntrrupt.logged += interval;
+            item.ytIntrrupt.session += interval;
+          } else {
+            item.ytIntrrupt.logged += interval;
+            item.ytIntrrupt.session = 0;
+          }
         }
       }
       console.log(item.ytIntrrupt);
