@@ -1,5 +1,8 @@
 {
   "dependencies": {
     "@types/firefox-webext-browser": "^120.0.4"
+  },
+  "devDependencies": {
+    "web-ext": "^8.6.0"
   }
 }
