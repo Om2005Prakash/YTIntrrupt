@@ -1,24 +1,30 @@
 {
-    "manifest_version": 2,
-    "name": "YTIntrrupt",
-    "version": "2.1.0",
-    "description": "A tool to keep track of time spent on youtube (actively watching), it also sends a alert every 30min of watch time to remaind a break",
-    "icons": {
-      "48": "icons/eagle.svg"
-    },
-    "permissions": [
-      "tabs",
-      "storage",
-      "https://www.youtube.com/*"
+  "manifest_version": 2,
+  "name": "YTIntrrupt",
+  "version": "3.0.0",
+  "description": "A tool to keep track of time spent on youtube (actively watching), it also sends a alert every 30min of watch time to remaind a break",
+  "icons": {
+    "48": "icons/eagle.svg"
+  },
+  "permissions": [
+    "tabs",
+    "storage",
+    "https://www.youtube.com/*"
+  ],
+  "background": {
+    "scripts": [
+      "background.js"
     ],
-    "background": {
-      "scripts": ["background.js"],
-      "persistent": true
-    },
-    "content_scripts": [
+    "persistent": true
+  },
+  "content_scripts": [
     {
-      "matches": ["https://www.youtube.com/*"],
-      "js": ["content.js"]
+      "matches": [
+        "https://www.youtube.com/*"
+      ],
+      "js": [
+        "content.js"
+      ]
     }
   ]
 }
