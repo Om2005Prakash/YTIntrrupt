@@ -41,7 +41,8 @@ if (!window.timerinit) {
     box.querySelector(".eagle-icon").classList.toggle("hidden", !inWorkMode);
     // Send message to background to change state
     browser.runtime.sendMessage({
-      command: "workMode"
+      command: "workMode",
+      state: inWorkMode,
     });
   });
 

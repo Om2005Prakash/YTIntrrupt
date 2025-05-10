@@ -19,7 +19,7 @@ let workMode = false;
 
 browser.runtime.onMessage.addListener(function (request, sender, sendResponse) {
   if (request.command === "workMode") {
-    workMode = !workMode;
+    workMode = request.state;
     console.log(`Work mode: ${workMode}`);
     return true;
   }
