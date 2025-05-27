@@ -61,7 +61,7 @@ if (!window.timerinit) {
         position: fixed;
         top: 10px;
         right: 450px;
-        background: rgba(0,0,0,0.6);
+        background: rgba(0, 0, 0, 0.3);
         color: white;
         padding: 10px 14px;
         border-radius: 10px;
@@ -74,16 +74,16 @@ if (!window.timerinit) {
         transition: background 0.4s ease;
         z-index: 9999;
       }
-      .ytIntrrupt-box.work-mode {
-        background: #000000;
-        color: gold;
-        transform: scale(1.3);
-        padding: 14px 18px;
+      .ytIntrrupt-box.work-mode { 
+        background: rgba(0, 0, 0, 0.3);
+        color: gold; 
+        transform: scale(1.3); 
+        padding: 14px 18px; 
       }
 
       .eagle-container {
-        width: 24px;
-        height: 24px;
+        width: 35px;
+        height: 35px;
         position: relative;
       }
 
@@ -91,8 +91,8 @@ if (!window.timerinit) {
         position: absolute;
         top: 0;
         left: 0;
-        width: 24px;
-        height: 24px;
+        width: 35px;
+        height: 35px;
         fill: gold;
         opacity: 0;
         transform: scale(0.5) translateY(10px);
