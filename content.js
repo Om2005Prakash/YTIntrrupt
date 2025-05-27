@@ -34,16 +34,20 @@ if (!window.timerinit) {
   `;
 
   // Add click to toggle work mode
-  let inWorkMode = false;
+
+  if (window.inWorkMode == undefined) {
+    window.inWorkMode = false;
+  }
+
   box.addEventListener("click", () => {
-    inWorkMode = !inWorkMode;
-    box.classList.toggle("work-mode", inWorkMode);
-    box.querySelector(".eagle-icon").classList.toggle("hidden", !inWorkMode);
-    // Send message to background to change state
-    browser.runtime.sendMessage({
-      command: "workMode",
-      state: inWorkMode,
-    });
+    window.inWorkMode = !window.inWorkMode;
+    box.classList.toggle("work-mode", window.inWorkMode);
+    box.querySelector(".eagle-icon").classList.toggle("hidden", !window.inWorkMode);
+    temp = document.getElementsByTagName("html")[0];
+    temp.children["unhook-yt"]["parentElement"]["attributes"]["hide_feed"].nodeValue = "true";
+    if (window.blackout != true) { temp.children["unhook-yt"]["parentElement"]["attributes"]["hide_recommended"].nodeValue = "false" };
+    temp.children["unhook-yt"]["parentElement"]["attributes"]["hide_shorts"].nodeValue = "true";
+    temp.children["unhook-yt"]["parentElement"]["attributes"]["hide_endscreen"].nodeValue = "true";
   });
 
   document.body.appendChild(box);
@@ -119,14 +123,34 @@ function removeExistingTimer() {
 
 browser.runtime.onMessage.addListener(function (request, sender, sendResponse) {
   if (request.command === "updateUI") {
-    window.timer.textContent = `${request.logged}`;
-    sendResponse({ content: "UI updated" });
-    return true;
+    if (window.inWorkMode) {
+      sendResponse({ inWorkMode: window.inWorkMode });
+      return true;
+    } else {
+      window.timer.textContent = `${request.logged}`;
+      sendResponse({ inWorkMode: window.inWorkMode });
+      return true;
+    }
   }
-  else if (request.command === "updateUI&alert") {
-    window.timer.textContent = `${request.logged}`;
-    alert(request.alert);
-    sendResponse({ content: "UI updated + Alert" });
+  else if (request.command === "alert") {
+    if (window.inWorkMode) {
+      sendResponse({ inWorkMode: window.inWorkMode });
+      return true;
+    } else {
+      alert(request.alert);
+      sendResponse({ inWorkMode: window.inWorkMode });
+      return true;
+    }
+  }
+  else if (request.command === "blackout") {
+    console.log("Backout request");
+    console.log(request.active);
+    temp = document.getElementsByTagName("html")[0];
+    temp.children["unhook-yt"]["parentElement"]["attributes"]["hide_feed"].nodeValue = request.active.toString();
+    temp.children["unhook-yt"]["parentElement"]["attributes"]["hide_recommended"].nodeValue = request.active.toString();
+    temp.children["unhook-yt"]["parentElement"]["attributes"]["hide_shorts"].nodeValue = (window.inWorkMode).toString();
+    temp.children["unhook-yt"]["parentElement"]["attributes"]["hide_endscreen"].nodeValue = (window.inWorkMode).toString();
+    window.blackout = request.active;
     return true;
   }
 });

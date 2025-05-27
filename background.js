@@ -1,35 +1,13 @@
-/**
- * My goal is to prevent binge watching and avoid excessive screen time
- * 
- * I want to build a tracker, It works in two modes work mode and normal mode
- * 
- * Work mode tracks time spend in doing useful stuff (like tutorials, music etc) and has to manually activated.
- * For now work mode basically stops the timer increment.
- * 
- * The time spent on Normal mode is shown on UI, with a background session timer count which triggers
- * a alert at certain interval
- * 
- * Normal is the default mode
- */
-
 const interval = 60 * 1000;
-const alert_interval = 30 * 60 * 1000;
-
-let workMode = false;
-
-browser.runtime.onMessage.addListener(function (request, sender, sendResponse) {
-  if (request.command === "workMode") {
-    workMode = request.state;
-    console.log(`Work mode: ${workMode}`);
-    return true;
-  }
-});
+const alert_interval = 25 * 60 * 1000;
+const blackout_interval = 9 * 60 * 1000;
+let blackout = false;
 
 //Timer Update Routine
 function main() {
   function TimerUpdateRoutine(tabs) {
     //Communicate with Content Script
-    function commContentScript(payload) {
+    function commContentScript(payload, callback) {
       function handleResponse(response) {
         if (response == undefined) {
           console.log("Content Script died, injected new script");
@@ -38,10 +16,10 @@ function main() {
             tabs[0].id,
             payload);
         } else {
-          console.log(response.content);
+          console.log(response.inWorkMode);
+          if (callback != undefined) { callback(response.inWorkMode) };
         }
       }
-
       browser.tabs.sendMessage(tabs[0].id, payload, handleResponse);
     }
 
@@ -57,6 +35,9 @@ function main() {
           "session": 0,
         }
       });
+    }
+    function falseBlackout() {
+      blackout = false;
     }
 
     //Handle HIT from storage API
@@ -78,38 +59,50 @@ function main() {
         };
       } else {
         // Just update logged time on same day
-        item.ytIntrrupt.lastlog = Date.now();
-        if (!workMode) {
-          if ((Date.now() - item.ytIntrrupt.lastlog < (interval + 5 * 1000))) {
-            item.ytIntrrupt.logged += interval;
-            item.ytIntrrupt.session += interval;
-          } else {
-            item.ytIntrrupt.logged += interval;
-            item.ytIntrrupt.session = 0;
-          }
+        if ((Date.now() - item.ytIntrrupt.lastlog < (interval + 5 * 1000))) {
+          item.ytIntrrupt.logged += interval;
+          item.ytIntrrupt.session += interval;
+        } else {
+          item.ytIntrrupt.logged += interval;
+          item.ytIntrrupt.session = interval;
         }
-      }
-      console.log(item.ytIntrrupt);
-      browser.storage.local.set({ "ytIntrrupt": item.ytIntrrupt });
+        item.ytIntrrupt.lastlog = Date.now();
 
+      }
+      console.log(item.ytIntrrupt)
+      payload_alert = {
+        command: "alert",
+        alert: `You've been on YouTube for ${item.ytIntrrupt.session / (60 * 1000)} minutes. How about a quick break? 🙂`
+      };
+      payload_ui = {
+        command: "updateUI",
+        logged: `${(item.ytIntrrupt.logged / (60 * 1000))} min`,
+      };
       //Prepare payload and send
+      let flag = 0
       if (item.ytIntrrupt.session != 0 && item.ytIntrrupt.session % alert_interval == 0) {
-        // Update UI and alert
-        payload = {
-          command: "updateUI&alert",
-          logged: `${item.ytIntrrupt.logged / (60 * 1000)} min`,
-          alert: `You've been on YouTube for ${item.ytIntrrupt.session / (60 * 1000)} minutes. How about a quick break? 🙂`
-        };
-
-      } else {
-        payload = {
-          command: "updateUI",
-          logged: `${(item.ytIntrrupt.logged / (60 * 1000))} min`,
-        };
+        flag = 1;
+        commContentScript(payload_alert);
       }
-      commContentScript(payload);
+      commContentScript(payload_ui,
+        (inWorkMode) => {
+          if (inWorkMode == false) {
+            browser.storage.local.set({ "ytIntrrupt": item.ytIntrrupt });
+            if (flag == 1) {
+              console.log("hit")
+              blackout = true;
+              setTimeout(falseBlackout, blackout_interval);
+            }
+          }
+          payload_blackout = {
+            command: "blackout",
+            active: blackout,
+          }
+          console.log(payload_blackout);
+          commContentScript(payload_blackout);
+        }
+      )
     }
-
     browser.storage.local.get("ytIntrrupt").then(onGot, onError);
   }
 
